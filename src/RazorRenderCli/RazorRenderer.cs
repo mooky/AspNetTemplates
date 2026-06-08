@@ -93,8 +93,9 @@ public sealed class RazorRenderer : IRazorRenderer, IDisposable
         var services = new ServiceCollection();
         services.AddSingleton<IWebHostEnvironment>(environment);
         services.AddSingleton<IHostEnvironment>(environment);
-        services.AddSingleton<DiagnosticSource>(new DiagnosticListener("RazorRenderCli"));
-        services.AddSingleton(new DiagnosticListener("RazorRenderCli"));
+        var diagnosticListener = new DiagnosticListener("RazorRenderCli");
+        services.AddSingleton<DiagnosticSource>(diagnosticListener);
+        services.AddSingleton(diagnosticListener);
         services.AddSingleton(_loggerFactory);
         services.AddLogging();
         services.AddHttpContextAccessor();
