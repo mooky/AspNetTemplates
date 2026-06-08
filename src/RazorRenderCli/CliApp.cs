@@ -56,7 +56,7 @@ public static class CliApp
             verboseOption,
         };
 
-        rootCommand.SetAction((parseResult, _) =>
+        rootCommand.SetAction((parseResult, cancellationToken) =>
         {
             if (parseResult.GetValue(verboseOption) && levelSwitch is not null)
             {
@@ -66,7 +66,7 @@ public static class CliApp
             var template = parseResult.GetValue(templateArgument)!;
             var data = parseResult.GetValue(dataArgument)!;
             var outputFile = parseResult.GetValue(outputOption);
-            return ExecuteAsync(template, data, outputFile, output, error);
+            return ExecuteAsync(template, data, outputFile, output, error, cancellationToken);
         });
 
         var parseResult = rootCommand.Parse(args);
@@ -95,7 +95,8 @@ public static class CliApp
         FileInfo data,
         FileInfo? outputFile,
         TextWriter output,
-        TextWriter error)
+        TextWriter error,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -109,7 +110,7 @@ public static class CliApp
             var stopwatch = Stopwatch.StartNew();
 
             using var renderer = new RazorRenderer(new SerilogLoggerFactory());
-            var rendered = await renderer.RenderAsync(template.FullName, model);
+            var rendered = await renderer.RenderAsync(template.FullName, model, cancellationToken);
 
             stopwatch.Stop();
             Log.Information(
@@ -119,7 +120,7 @@ public static class CliApp
 
             if (outputFile is not null)
             {
-                await File.WriteAllTextAsync(outputFile.FullName, rendered);
+                await File.WriteAllTextAsync(outputFile.FullName, rendered, cancellationToken);
                 Log.Information("Wrote output to {OutputPath}", outputFile.FullName);
             }
             else
@@ -128,6 +129,12 @@ public static class CliApp
             }
 
             return ExitSuccess;
+        }
+        catch (OperationCanceledException)
+        {
+            Log.Warning("Operation cancelled");
+            error.WriteLine("error: operation cancelled.");
+            return ExitRenderError;
         }
         catch (RenderException ex)
         {

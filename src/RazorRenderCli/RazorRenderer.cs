@@ -34,8 +34,11 @@ public sealed class RazorRenderer : IRazorRenderer, IDisposable
         _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
     }
 
-    public async Task<string> RenderAsync(string templatePath, object? model)
+    public async Task<string> RenderAsync(
+        string templatePath, object? model, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var fullPath = Path.GetFullPath(templatePath);
         if (!File.Exists(fullPath))
         {
@@ -75,6 +78,9 @@ public sealed class RazorRenderer : IRazorRenderer, IDisposable
         await using var writer = new StringWriter();
         var viewContext = new ViewContext(
             actionContext, view, viewData, tempData, writer, new HtmlHelperOptions());
+
+        // IView.RenderAsync accepts no token, so honour cancellation at the boundary.
+        cancellationToken.ThrowIfCancellationRequested();
 
         try
         {

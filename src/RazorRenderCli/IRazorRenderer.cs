@@ -11,5 +11,9 @@ public interface IRazorRenderer
     /// Thrown when the template cannot be found, fails to compile, or throws while rendering
     /// (for example, a missing member on the dynamic model).
     /// </exception>
-    Task<string> RenderAsync(string templatePath, object? model);
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is signalled before rendering begins.
+    /// </exception>
+    Task<string> RenderAsync(
+        string templatePath, object? model, CancellationToken cancellationToken = default);
 }

@@ -65,6 +65,17 @@ public class RazorRendererTests
     }
 
     [Test]
+    public void RenderAsync_CancelledToken_ThrowsBeforeRendering()
+    {
+        var model = JsonModelLoader.Load("""{ "name": "Razor" }""");
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        Assert.ThrowsAsync<OperationCanceledException>(
+            () => _renderer.RenderAsync(Fixture("simple.cshtml"), model, cts.Token));
+    }
+
+    [Test]
     public void RenderAsync_MissingMember_ThrowsRenderException()
     {
         var model = JsonModelLoader.Load("""{ "present": 1 }""");
