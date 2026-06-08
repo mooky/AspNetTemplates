@@ -109,6 +109,9 @@ Templates are standard Razor. The JSON data file is bound as `@Model`:
 - `@Model.user.address.city` — nested objects via member access.
 - `@foreach (var item in Model.items) { ... }` — iterate arrays.
 - `@if (Model.flag) { ... } else { ... }` — conditionals.
+- `@{ Layout = "/_Layout.cshtml"; }` — layouts and partials are resolved relative to the
+  template's own directory, so reference them by an app-relative path (a leading `/` with the
+  `.cshtml` extension), e.g. `/_Layout.cshtml`, not a bare name like `_Layout`.
 
 Referencing a key that is absent from the data throws at render time (standard ASP.NET dynamic-model
 behavior); the tool reports the error on stderr and exits with code `1`.

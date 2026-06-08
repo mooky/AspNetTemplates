@@ -65,6 +65,14 @@ public class RazorRendererTests
     }
 
     [Test]
+    public async Task RenderAsync_WithLayout_WrapsBodyInLayout()
+    {
+        var model = JsonModelLoader.Load("""{ "name": "Razor" }""");
+        var result = await _renderer.RenderAsync(Fixture("with-layout.cshtml"), model);
+        Assert.That(result, Is.EqualTo("[Body:Razor]"));
+    }
+
+    [Test]
     public void RenderAsync_CancelledToken_ThrowsBeforeRendering()
     {
         var model = JsonModelLoader.Load("""{ "name": "Razor" }""");
