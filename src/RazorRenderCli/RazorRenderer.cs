@@ -26,7 +26,7 @@ namespace RazorRenderCli;
 public sealed class RazorRenderer : IRazorRenderer, IDisposable
 {
     private readonly ILoggerFactory _loggerFactory;
-    private readonly ConcurrentDictionary<string, ServiceProvider> _providersByDirectory =
+    private readonly ConcurrentDictionary<string, Lazy<ServiceProvider>> _providersByDirectory =
         new(StringComparer.OrdinalIgnoreCase);
 
     public RazorRenderer(ILoggerFactory? loggerFactory = null)
@@ -44,7 +44,11 @@ public sealed class RazorRenderer : IRazorRenderer, IDisposable
 
         var directory = Path.GetDirectoryName(fullPath)!;
         var fileName = Path.GetFileName(fullPath);
-        var provider = _providersByDirectory.GetOrAdd(directory, BuildServiceProvider);
+        // Lazy ensures BuildServiceProvider runs exactly once per directory even under
+        // concurrent first-access; GetOrAdd's factory itself offers no such guarantee.
+        var provider = _providersByDirectory
+            .GetOrAdd(directory, dir => new Lazy<ServiceProvider>(() => BuildServiceProvider(dir)))
+            .Value;
 
         var viewEngine = provider.GetRequiredService<IRazorViewEngine>();
         var tempDataProvider = provider.GetRequiredService<ITempDataProvider>();
@@ -116,7 +120,10 @@ public sealed class RazorRenderer : IRazorRenderer, IDisposable
     {
         foreach (var provider in _providersByDirectory.Values)
         {
-            provider.Dispose();
+            if (provider.IsValueCreated)
+            {
+                provider.Value.Dispose();
+            }
         }
 
         _providersByDirectory.Clear();
