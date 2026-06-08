@@ -85,8 +85,8 @@ public static class JsonModelLoader
                 return element.GetString();
 
             case JsonValueKind.Number:
-                // Prefer an integral type when the value has no fractional part so that
-                // templates render "3" instead of "3" vs "3.0" surprises.
+                // Prefer an integral type when the value fits, so a whole number renders as
+                // "3" rather than "3.0".
                 return element.TryGetInt64(out var l) ? l : element.GetDouble();
 
             case JsonValueKind.True:
