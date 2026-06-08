@@ -1,0 +1,12 @@
+[start]
+@{ var n = (int)Model.n; }
+[expr on own line]:@(n):[end]
+[code block was on the line above]
+[inline]before @{ var m = n + 1; }after[done]
+[loop]
+@foreach (var item in Model.items)
+{
+    <text>  - @item
+</text>
+}
+[end]
